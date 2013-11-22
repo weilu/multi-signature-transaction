@@ -1,0 +1,75 @@
+---
+http_interactions:
+- request:
+    method: post
+    uri: http://bitcoinrpc:fb56840652f0196e911981e3993a158d@127.0.0.1:18332/
+    body:
+      encoding: UTF-8
+      string: '{"method":"createmultisig","params":[2,["0441d662fb5fdfc12299114e1592c93fc5e94d4d53eaaee6079db94ea5c92fd50842fa77c554727dcd570f73db95ee2f353d870959a80f3c0c1b6d170b6dbd0542","0465c1574a9124e1aacd6be794a7c023f86cffd3ade6015115f1b306061fe805dd3b741fb111f35a2b0bb90bba590704b2accaa02fd348aeec0482cc0f36dc7d80","043dbf4e2210a190aeddbe80778647a7348ba1cbe5b4405a0145d02037d454ad2879900580d7842c106fffc6ff6e71266a1137c8e8ed81962920cb1f42906354f3"]],"id":"jsonrpc"}'
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - '*/*'
+      User-Agent:
+      - Ruby
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Fri, 22 Nov 2013 15:52:45 +0000
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '509'
+      Content-Type:
+      - application/json
+      Server:
+      - bitcoin-json-rpc/v0.8.2-788-g96aaf00-beta
+    body:
+      encoding: UTF-8
+      string: |
+        {"result":{"address":"2NCJwNct2SVE5VwdrPXmnek59kCfdgCpxeF","redeemScript":"52410441d662fb5fdfc12299114e1592c93fc5e94d4d53eaaee6079db94ea5c92fd50842fa77c554727dcd570f73db95ee2f353d870959a80f3c0c1b6d170b6dbd0542410465c1574a9124e1aacd6be794a7c023f86cffd3ade6015115f1b306061fe805dd3b741fb111f35a2b0bb90bba590704b2accaa02fd348aeec0482cc0f36dc7d8041043dbf4e2210a190aeddbe80778647a7348ba1cbe5b4405a0145d02037d454ad2879900580d7842c106fffc6ff6e71266a1137c8e8ed81962920cb1f42906354f353ae"},"error":null,"id":"jsonrpc"}
+    http_version: 
+  recorded_at: Fri, 22 Nov 2013 15:52:45 GMT
+- request:
+    method: post
+    uri: http://bitcoinrpc:fb56840652f0196e911981e3993a158d@127.0.0.1:18332/
+    body:
+      encoding: UTF-8
+      string: '{"method":"createrawtransaction","params":[[{"txid":"0684a463fa1ad776d25f025355e963976e366c35c05895889d814a977eb2883d","vout":0}],{"mqQdvNxXWf3aFr7Dz342uXt4dv6k1BSNPa":0.5}],"id":"jsonrpc"}'
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - '*/*'
+      User-Agent:
+      - Ruby
+      Content-Type:
+      - application/json
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Fri, 22 Nov 2013 15:52:45 +0000
+      Connection:
+      - keep-alive
+      Content-Length:
+      - '212'
+      Content-Type:
+      - application/json
+      Server:
+      - bitcoin-json-rpc/v0.8.2-788-g96aaf00-beta
+    body:
+      encoding: UTF-8
+      string: |
+        {"result":"01000000013d88b27e974a819d889558c0356c366e9763e95553025fd276d71afa63a484060000000000ffffffff0180f0fa02000000001976a9146c7f6caa5838d623721c07404ad68c6406065ac588ac00000000","error":null,"id":"jsonrpc"}
+    http_version: 
+  recorded_at: Fri, 22 Nov 2013 15:52:45 GMT
+recorded_with: VCR 2.7.0
