@@ -1,6 +1,7 @@
 source "https://rubygems.org"
 
 gem 'bitcoin-ruby'
+gem 'thor'
 
 group :development, :test do
   gem 'debugger'
