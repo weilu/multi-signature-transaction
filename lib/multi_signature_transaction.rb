@@ -29,7 +29,7 @@ class MultiSignatureTransaction
   end
 
   # done by seller
-  def seller_sign_off_payment_tx tx_hex, seller_private_key
+  def seller_sign_off_spending_tx tx_hex, seller_private_key
     tx = Bitcoin::Protocol::Tx.new tx_hex.htb
     tx.in[0].script_sig = Bitcoin::Script.to_multisig_script_sig(sign(tx, seller_private_key) + "\x01")
     tx.to_payload.unpack('H*')[0]

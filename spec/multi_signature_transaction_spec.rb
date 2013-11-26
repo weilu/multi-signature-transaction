@@ -36,7 +36,7 @@ describe MultiSignatureTransaction do
     end
   end
 
-  describe '#seller_sign_off_payment_tx' do
+  describe '#seller_sign_off_spending_tx' do
     before do
       tx.funding_tx_hex = File.read('spec/fixtures/funding_tx_hex').strip
     end
@@ -44,7 +44,7 @@ describe MultiSignatureTransaction do
     let(:unsigned_payment_tx_hex) { File.read('spec/fixtures/unsigned_payment_tx_hex').strip }
 
     it 'partially signs the tx', :cassette do
-      half_signed_tx_hex = tx.seller_sign_off_payment_tx unsigned_payment_tx_hex, seller_private_key
+      half_signed_tx_hex = tx.seller_sign_off_spending_tx unsigned_payment_tx_hex, seller_private_key
       expect(half_signed_tx_hex.length).to be > unsigned_payment_tx_hex.length
     end
   end
