@@ -1,4 +1,5 @@
 require 'bitcoin'
+require 'bitcoin/ffi/openssl'
 require_relative 'bitcoin_rpc'
 
 require 'debugger'
@@ -6,7 +7,7 @@ require 'awesome_print'
 
 class MultiSignatureTransaction
   attr_reader :multi_sig_address
-  attr_accessor :funding_tx
+  attr_accessor :funding_tx, :funding_tx_hex
 
   def initialize buyer_public_key, seller_public_key, escrow_public_key
     @buyer_public_key = buyer_public_key
@@ -29,12 +30,11 @@ class MultiSignatureTransaction
   def create_and_send buyer_private_key, prev_tx_id, prev_vout, starting_amount, send_amount
     tx = @client.createrawtransaction [{txid: prev_tx_id, vout: prev_vout}],
       {@multi_sig_address => send_amount, @buyer_address => starting_amount - send_amount}
-    # puts "#{Time.now} | raw tx: #{tx}"
 
     signed_tx = @client.signrawtransaction tx, [], [buyer_private_key]
-    # puts "#{Time.now} | signed tx: #{signed_tx}"
     raise 'failed to sign tx' unless signed_tx['complete']
 
+    @funding_tx_hex = signed_tx['hex']
     @funding_tx = @client.decoderawtransaction(signed_tx['hex'])
 
     send_tx signed_tx['hex']
@@ -46,21 +46,32 @@ class MultiSignatureTransaction
     create_spend_tx @seller_address
   end
 
+
+  def sign tx, private_key
+    prev_tx = Bitcoin::Protocol::Tx.new @funding_tx_hex.htb
+
+    key = Bitcoin.open_key Bitcoin::Key.from_base58(private_key).priv
+    Bitcoin.sign_data(key, tx.signature_hash_for_input(0, prev_tx, nil, nil, nil, @redeem_script.htb))
+  end
+
   # done by seller
   # to be signed by escrow once buyer's feature wins
-  def seller_sign_off_payment_tx tx, seller_private_key
-    half_signed_tx = @client.signrawtransaction tx, [funding_tx_hash], [seller_private_key]
-    puts "#{Time.now} | half signed spend tx: #{half_signed_tx}"
-    half_signed_tx['hex']
+  def seller_sign_off_payment_tx tx_hex, seller_private_key
+    tx = Bitcoin::Protocol::Tx.new tx_hex.htb
+    tx.in[0].script_sig = Bitcoin::Script.to_multisig_script_sig(sign(tx, seller_private_key) + "\x01")
+    tx.to_payload.unpack('H*')[0]
   end
 
   # done by escrow
-  def sign_off_and_send_payment_tx tx, escrow_private_key
-    signed_tx = @client.signrawtransaction tx, [funding_tx_hash], [escrow_private_key]
-    puts "#{Time.now} | signed spend tx: #{signed_tx}"
-    raise 'failed to sign off tx' unless signed_tx['complete']
+  def sign_off_and_send_payment_tx tx_hex, escrow_private_key
+    tx = Bitcoin::Protocol::Tx.new tx_hex.htb
+    tx.in[0].script_sig = Bitcoin::Script.to_multisig_script_sig(*Bitcoin::Script.new(tx.in[0].script_sig).chunks[1..-1],
+                                                                 sign(tx, escrow_private_key) + "\x01",
+                                                                 @redeem_script.htb)
 
-    send_tx signed_tx['hex']
+    raise 'failed to sign tx' unless tx.verify_input_signature 0, Bitcoin::Protocol::Tx.new(@funding_tx_hex.htb)
+
+    send_tx tx.to_payload.unpack('H*')[0]
   end
 
   # done by escrow once funding transaction is verified
@@ -73,30 +84,17 @@ class MultiSignatureTransaction
 
   def send_tx signed_tx_hex
     tx_id = @client.sendrawtransaction signed_tx_hex
-    # puts "#{Time.now} | sent tx_id: #{tx_id}\n\n"
     return tx_id
   rescue Exception => e
     puts "#{Time.now} | error: #{e.message}\n\n"
   end
 
-  def funding_tx_hash
-    funding_tx_hash = {
-      txid: @funding_tx['txid'],
-      vout: 0,
-      scriptPubKey: script_pubkey,
-      redeemScript: @redeem_script
-    }
-  end
-
-  def script_pubkey
-    script = Bitcoin::Script.from_string(vout_to_multi_sig_address['scriptPubKey']['asm'])
-    script.to_binary.unpack("H*")[0]
-  end
-
   def create_spend_tx to_address
-    tx = @client.createrawtransaction [{txid: @funding_tx['txid'], vout: 0}], {to_address => vout_to_multi_sig_address['value']}
-    puts "#{Time.now} | unsigned spend tx: #{tx}"
-    tx
+    tx = Bitcoin::Protocol::Tx.new
+    prev_tx = Bitcoin::Protocol::Tx.new @funding_tx_hex.htb
+    tx.add_in Bitcoin::Protocol::TxIn.new(prev_tx.binary_hash, 0, 0, '')
+    tx.add_out Bitcoin::Protocol::TxOut.value_to_address(vout_to_multi_sig_address['value'] * 100_000_000, to_address)
+    tx.to_payload.unpack('H*')[0]
   end
 
   def vout_to_multi_sig_address
