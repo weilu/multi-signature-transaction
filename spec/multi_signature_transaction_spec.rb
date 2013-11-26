@@ -23,6 +23,7 @@ describe MultiSignatureTransaction do
 
   describe '#create_and_send', :cassette do
     it 'sends correct mount and change to multi sig address and buyer address' do
+      pending 'this should not be tested here'
       funding_tx_id = tx.create_and_send buyer_private_key, 'c649d7d27107733ff4ae95d293f1edabd22aa30c56cf9f61a2cde3e43c7d686c', 1, 10, 0.5
       vouts = tx.funding_tx['vout']
 
@@ -40,7 +41,6 @@ describe MultiSignatureTransaction do
 
   describe '#create_payment_tx' do
     before do
-      tx.funding_tx = JSON.parse File.read('spec/fixtures/funding_tx.json')
       tx.funding_tx_hex = File.read('spec/fixtures/funding_tx_hex').strip
     end
 
@@ -59,7 +59,6 @@ describe MultiSignatureTransaction do
 
   describe '#seller_sign_off_payment_tx' do
     before do
-      tx.funding_tx = JSON.parse File.read('spec/fixtures/funding_tx.json')
       tx.funding_tx_hex = File.read('spec/fixtures/funding_tx_hex').strip
     end
 
@@ -73,7 +72,6 @@ describe MultiSignatureTransaction do
 
   describe '#sign_off_and_send_payment_tx' do
     before do
-      tx.funding_tx = JSON.parse File.read('spec/fixtures/funding_tx.json')
       tx.funding_tx_hex = File.read('spec/fixtures/funding_tx_hex').strip
     end
 

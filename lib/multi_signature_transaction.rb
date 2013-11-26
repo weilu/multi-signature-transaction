@@ -7,7 +7,7 @@ require 'awesome_print'
 
 class MultiSignatureTransaction
   attr_reader :multi_sig_address
-  attr_accessor :funding_tx, :funding_tx_hex
+  attr_accessor :funding_tx_hex
 
   def initialize buyer_public_key, seller_public_key, escrow_public_key
     @buyer_public_key = buyer_public_key
@@ -35,7 +35,6 @@ class MultiSignatureTransaction
     raise 'failed to sign tx' unless signed_tx['complete']
 
     @funding_tx_hex = signed_tx['hex']
-    @funding_tx = @client.decoderawtransaction(signed_tx['hex'])
 
     send_tx signed_tx['hex']
   end
@@ -45,7 +44,6 @@ class MultiSignatureTransaction
   def create_payment_tx
     create_spend_tx @seller_address
   end
-
 
   def sign tx, private_key
     prev_tx = Bitcoin::Protocol::Tx.new @funding_tx_hex.htb
@@ -93,14 +91,14 @@ class MultiSignatureTransaction
     tx = Bitcoin::Protocol::Tx.new
     prev_tx = Bitcoin::Protocol::Tx.new @funding_tx_hex.htb
     tx.add_in Bitcoin::Protocol::TxIn.new(prev_tx.binary_hash, 0, 0, '')
-    tx.add_out Bitcoin::Protocol::TxOut.value_to_address(vout_to_multi_sig_address['value'] * 100_000_000, to_address)
+    tx.add_out Bitcoin::Protocol::TxOut.value_to_address(funding_tx_value, to_address)
     tx.to_payload.unpack('H*')[0]
   end
 
-  def vout_to_multi_sig_address
-    address = @funding_tx['vout'].detect{|o| o['scriptPubKey']['addresses'].include?(@multi_sig_address)}
-    raise 'multi signature address not found in funding tx' if address.nil?
-    address
+  def funding_tx_value
+    Bitcoin::Protocol::Tx.new(@funding_tx_hex.htb).out.
+      select{|o| o.to_hash['scriptPubKey'].include?(Bitcoin.hash160 @redeem_script)}.
+      reduce(0){ |memo, o| memo += o.value }
   end
 end
 
