@@ -20,9 +20,11 @@ class MultiSignatureTransaction
 
     @client = BitcoinRPC.new('http://bitcoinrpc:fb56840652f0196e911981e3993a158d@127.0.0.1:18332')
 
-    multi_sig = @client.createmultisig(2, [buyer_public_key, seller_public_key, escrow_public_key])
-    @multi_sig_address = multi_sig["address"]
-    @redeem_script = multi_sig["redeemScript"]
+    inner_p2sh_script = Bitcoin::Script.to_multisig_script(2, @buyer_public_key, @seller_public_key, @escrow_public_key)
+    p2sh_hash = Bitcoin.hash160(inner_p2sh_script.unpack('H*')[0])
+    hex = Bitcoin.p2sh_version + p2sh_hash
+    @multi_sig_address = Bitcoin.encode_base58(hex + Bitcoin.checksum(hex))
+    @redeem_script = inner_p2sh_script.unpack('H*')[0]
   end
 
   # done by buyer
