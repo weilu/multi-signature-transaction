@@ -21,24 +21,6 @@ describe MultiSignatureTransaction do
     end
   end
 
-  describe '#create_and_send', :cassette do
-    it 'sends correct mount and change to multi sig address and buyer address' do
-      pending 'this should not be tested here'
-      funding_tx_id = tx.create_and_send buyer_private_key, 'c649d7d27107733ff4ae95d293f1edabd22aa30c56cf9f61a2cde3e43c7d686c', 1, 10, 0.5
-      vouts = tx.funding_tx['vout']
-
-      expect(vouts.count).to eq 2
-
-      expect(vouts[0]['scriptPubKey']['addresses']).to eq [tx.multi_sig_address]
-      expect(vouts[0]['value']).to eq(0.5)
-
-      expect(vouts[1]['scriptPubKey']['addresses']).to eq [Bitcoin.pubkey_to_address(buyer_public_key)]
-      expect(vouts[1]['value']).to eq(9.5)
-
-      expect(funding_tx_id).to be
-    end
-  end
-
   describe '#create_payment_tx' do
     before do
       tx.funding_tx_hex = File.read('spec/fixtures/funding_tx_hex').strip
@@ -51,9 +33,6 @@ describe MultiSignatureTransaction do
 
       script = Bitcoin::Script.new payment_tx.out[0].script
       expect(script.get_addresses).to eq [Bitcoin.pubkey_to_address(seller_public_key)]
-      # File.open('spec/fixtures/unsigned_payment_tx_hex', 'w') do |f|
-      #   f.puts payment_tx_hex
-      # end
     end
   end
 
